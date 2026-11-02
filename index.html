@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brankas Pribadi</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:linear-gradient(135deg,#101426,#202c48);
+ color:white;
+ min-height:100vh;
+ padding:20px;
+}
+.container{
+ max-width:500px;
+ margin:50px auto;
+ background:#192238;
+ padding:25px;
+ border-radius:20px;
+ box-shadow:0 10px 35px #0008;
+}
+h2{text-align:center}
+input,button{
+ width:100%;
+ padding:13px;
+ margin:9px 0;
+ border:0;
+ border-radius:10px;
+}
+input{background:#293650;color:white}
+button{
+ background:#617cff;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+button:hover{background:#405de6}
+.hidden{display:none}
+.gallery{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
+ margin-top:20px;
+}
+.item{
+ background:#293650;
+ padding:8px;
+ border-radius:12px;
+ overflow:hidden;
+}
+.item img,.item video{
+ width:100%;
+ height:150px;
+ object-fit:cover;
+ border-radius:8px;
+}
+.delete{background:#d94353}
+.small{text-align:center;color:#aab5ce;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="container" id="login">
+ <h2>🔐 Brankas Pribadi</h2>
+ <p class="small">Masukkan kata sandi untuk membuka brankas</p>
+ <input type="password" id="password" placeholder="Masukkan kata sandi">
+ <button onclick="masuk()">BUKA BRANKAS</button>
+ <p class="small" id="pesan"></p>
+</div>
+
+<div class="container hidden" id="brankas">
+ <h2>🔒 Brankas Saya</h2>
+ <p class="small">Foto dan video pribadi</p>
+
+ <input type="file" id="file" accept="image/*,video/*" multiple>
+ <button onclick="tambah()">＋ Tambahkan Foto / Video</button>
+
+ <div class="gallery" id="gallery"></div>
+ <button class="delete" onclick="keluar()">KUNCI BRANKAS</button>
+</div>
+
+<script>
+const KUNCI="123456";
+let data=[];
+
+function masuk(){
+ if(document.getElementById("password").value===KUNCI){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("brankas").classList.remove("hidden");
+  tampilkan();
+ }else{
+  document.getElementById("pesan").textContent="Kata sandi salah!";
+ }
+}
+
+function tambah(){
+ const files=document.getElementById("file").files;
+ for(let f of files){
+  if(!f.type.startsWith("image/") &&
+     !f.type.startsWith("video/"))continue;
+
+  const reader=new FileReader();
+  reader.onload=e=>{
+   data.push({src:e.target.result,type:f.type});
+   simpan();
+   tampilkan();
+  };
+  reader.readAsDataURL(f);
+ }
+}
+
+function simpan(){
+ try{
+  localStorage.setItem("brankas",JSON.stringify(data));
+ }catch(e){
+  alert("Penyimpanan penuh. Gunakan file yang lebih kecil.");
+ }
+}
+
+function tampilkan(){
+ data=JSON.parse(localStorage.getItem("brankas")||"[]");
+ const gallery=document.getElementById("gallery");
+ gallery.innerHTML="";
+
+ data.forEach((item,index)=>{
+  let div=document.createElement("div");
+  div.className="item";
+
+  let media=document.createElement(
+   item.type.startsWith("video/")?"video":"img"
+  );
+  media.src=item.src;
+  if(item.type.startsWith("video/")){
+   media.controls=true;
+  }
+
+  let btn=document.createElement("button");
+  btn.className="delete";
+  btn.textContent="Hapus";
+  btn.onclick=()=>{
+   data.splice(index,1);
+   simpan();
+   tampilkan();
+  };
+
+  div.appendChild(media);
+  div.appendChild(btn);
+  gallery.appendChild(div);
+ });
+}
+
+function keluar(){
+ document.getElementById("brankas").classList.add("hidden");
+ document.getElementById("login").classList.remove("hidden");
+ document.getElementById("password").value="";
+}
+
+</script>
+</body>
+</html>
